@@ -1,31 +1,35 @@
 import cv2
+import torch
 
-# Replace 'your_video_file.mp4' with the actual path to your video file
+# Video path (same as before)
 video_path = './IED_SmartWasteBin (1).mp4'
 
-# Create a VideoCapture object
+# Load YOLOv5 model
+model_path = './yolov5s.pt'  # Replace with your actual model path
+model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path)
+
+# Open video capture
 cap = cv2.VideoCapture(video_path)
 
 if not cap.isOpened():
     print("Error: Could not open video file.")
     exit()
 
-while True:
-    ret, frame = cap.read()
+ret, frame = cap.read()  # Read a single frame for testing
 
-    if not ret:
-        print("End of video.")
-        break
+if not ret:
+    print("Error: Could not read frame.")
+    exit()
 
-    ret = cap.set(cv2.CAP_PROP_FRAME_WIDTH,320)
-    ret = cap.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
-    # Display the frame
-    cv2.imshow('Video', frame)
+# Perform inference
+results = model(frame)
 
-    # Exit on pressing the 'q' key
-    if cv2.waitKey(25) & 0xFF == ord('q'):
-        break
+# Print the results (bounding boxes, confidence, classes)
+print(results.pandas().xyxy[0])  # Print results as pandas dataframe
 
-# Release the VideoCapture object and close all windows
-cap.release()
+# Display the frame (optional for now, just for visual confirmation)
+cv2.imshow('Single Frame with Detection (check console for output)', frame)
+cv2.waitKey(0)  # Wait until a key is pressed
 cv2.destroyAllWindows()
+
+cap.release()
